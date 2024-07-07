@@ -17,7 +17,6 @@ function Home() {
       if (data.length !== 0) {
         setBooks(data);
         setLoading(false);
-        console.log(data[0]);
       }
     }
     getBooksList();
