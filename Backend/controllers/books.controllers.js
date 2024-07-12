@@ -32,7 +32,19 @@ exports.modifyBook = (req, res, next) => {
             res.status(401).json({message: "Non-autorisé"})
         } else {
             Book.updateOne({_id: req.params.id}, {...bookObject, _id: req.params.id})
-            .then(() => res.status(200).json({message: "Livre modifié"}))
+            .then(() => {
+                const filename = book.imageUrl.split("/images/")[1];
+                if (bookObject?.imageUrl !== undefined && filename !== bookObject?.imageUrl) {
+                    fs.unlink(`images/${filename}`, (err) => {
+                        if (err) {
+                            console.error("Erreur lors de la suppression du fichier :", err);
+                        } else {
+                            console.log(`Fichier ${filename} supprimé avec succès`);
+                        }
+                    });
+                }
+                res.status(200).json({message: "Livre modifié"});
+            })
             .catch(error => res.status(400).json({error}));
         }
     })
