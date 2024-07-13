@@ -16,7 +16,27 @@ exports.createBook = (req, res, next) => {
 };
 
 exports.createBookRating = (req, res, next) => {
-    
+    let alreadyRated = false;
+
+    Book.findOne({_id: req.params.id})
+    .then((book) => {
+        book.ratings.forEach(rate => {
+            if (rate.userId === req.body.userId) {
+                alreadyRated = true;
+                console.log("Tentative de création de plusieurs note avec le même userId");
+            }
+        });
+
+        if (!alreadyRated) {
+            let newRatings = book.ratings;
+            newRatings.push({userId: req.body.userId, grade: req.body.rating});
+
+            Book.updateOne({ _id: book._id }, {$set: {ratings: newRatings}})
+            .then(() => res.status(200).json(book))
+            .catch(error => res.status(400).json({error}));
+        }
+    })
+    .catch(error => res.status(400).json({error}));
 };
 
 exports.modifyBook = (req, res, next) => {
