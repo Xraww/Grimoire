@@ -31,7 +31,11 @@ exports.createBookRating = (req, res, next) => {
             let newRatings = book.ratings;
             newRatings.push({userId: req.body.userId, grade: req.body.rating});
 
-            Book.updateOne({ _id: book._id }, {$set: {ratings: newRatings}})
+            const totalRates = newRatings.length;
+            const sum = newRatings.reduce((acc, obj) => acc + obj.grade, 0);
+            const newAverageRating = totalRates > 0 ? (sum / totalRates).toFixed(2) : 0;
+
+            Book.updateOne({ _id: book._id }, {$set: {ratings: newRatings, averageRating: newAverageRating}})
             .then(() => res.status(200).json(book))
             .catch(error => res.status(400).json({error}));
         }
