@@ -1,14 +1,16 @@
 const Book = require("../models/Book");
 const fs = require("fs")
+const path = require("path");
 
 exports.createBook = (req, res, next) => {
     const dataObject = JSON.parse(req.body.book);
     delete dataObject._id;
     delete dataObject._userId;
+
     const book = new Book({
         ...dataObject,
         userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${path.basename(req.file.path)}`,
     });
     book.save()
     .then(() => res.status(201).json({message: "Livre enregistré"}))
@@ -46,7 +48,7 @@ exports.createBookRating = (req, res, next) => {
 exports.modifyBook = (req, res, next) => {
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${path.basename(req.file.path)}`
     } : {...req.body};
 
     delete bookObject._id;
@@ -58,6 +60,7 @@ exports.modifyBook = (req, res, next) => {
             Book.updateOne({_id: req.params.id}, {...bookObject, _id: req.params.id})
             .then(() => {
                 const filename = book.imageUrl.split("/images/")[1];
+                
                 if (bookObject?.imageUrl !== undefined && filename !== bookObject?.imageUrl) {
                     fs.unlink(`images/${filename}`, (err) => {
                         if (err) {
